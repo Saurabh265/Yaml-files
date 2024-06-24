@@ -1,0 +1,62 @@
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties: {}
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      GatewayId: !Ref InternetGateway
+      DestinationCidrBlock: 0.0.0.0/0
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-08a0d1e16fc3f61ea
+      InstanceType: t2.micro
+      KeyName: !Ref KeyPair
+      VpcId: !Ref VPC
+      SubnetId: !Ref Subnet
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+  KeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: new3
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow all traffic
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1 # Allow all protocols (TCP, UDP, ICMP, etc.)
+          CidrIp: 0.0.0.0/0 # Allow all inbound traffic from all IPv4 addresses
+      SecurityGroupEgress:
+        - IpProtocol: -1 # Allow all protocols (TCP, UDP, ICMP, etc.)
+          CidrIp: 0.0.0.0/0 # Allow all outbound traffic to all IPv4 addresses
+  ElasticIP:
+       Type: AWS::EC2::EIP
+       Properties:
+          InstanceId: !Ref Instance
